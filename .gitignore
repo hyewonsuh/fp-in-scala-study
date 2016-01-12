@@ -1,12 +1,17 @@
-*.un~
-*.swp
-tags
-target
-project/boot
+*.class
+*.log
+
+# sbt specific
+.cache
 .history
-project.vim
-*.old
-.idea
-.project
-.classpath
-.metadata/
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
