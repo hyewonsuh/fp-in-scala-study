@@ -1,4 +1,4 @@
-## Functional Programing ?
+## 01. Functional Programing ?
 #### Pure Function
 function without side-effect
 
@@ -30,7 +30,7 @@ val r2 = x.reverse
 r1 == r2 //true
 ````
 
-## FP in scala
+## 02.Getting started with FP in scala
 꼬리 재귀함수/고차함수/다형적 고차함수
 
 #### tail recursive function
@@ -101,3 +101,26 @@ def compose[A, B, C](f: B => C, g: A => B): A => C = (a: A) => f(g(a))
 // f andThen g a = g(f(a))
 // f compose g == g andThen f
 ````
+
+## 03. Functional Data structure
+- pure function 만으로 조작되는 자료구조이므로 (side effect이 없어야 하니) immutable 해야함.
+- 값복사가 많이 일어나지 않을까? => 그렇지 않다 (functional data sharing)
+
+````scala
+val tail = List(2,3)
+val xs = 1 :: tail
+
+val ys = xs match {
+  case (h :: tail) => 10 :: tail
+  case Nil => Nil
+}   
+assert((tail eq xs.tail) == true) // AnyRef.eq 함수는 same reference인지 비교함
+assert((tail eq ys.tail) == true)
+````
+
+## 04. Handling errors without exceptions
+## 05. Strictness and laziness
+## 06. Purely functional state
+## 07. Purely functional parallelism
+
+
