@@ -124,10 +124,21 @@ object Par {
 
   def main(args: Array[String]) {
 
-    val filter: Par[List[Int]] = Par.parFilter(List(1,2,3))(a => a> 2)
+//    val filter: Par[List[Int]] = Par.parFilter(List(1))(a => a> 2)
 
-    println(filter)
-    println(filter(Executors.newFixedThreadPool(2)).get(2, TimeUnit.SECONDS))
+
+    val executorService: ExecutorService = Executors.newFixedThreadPool(1)
+//    println(filter(executorService).get(2, TimeUnit.SECONDS))
+    // 이 예제는 thread deadlock이 무조건 생김 // 개수가 4까지는 ..
+
+//    println(Par.fork(unit(1))(executorService).get(2, TimeUnit.MINUTES)) //1개로 가능
+
+//    println(Par.map2(lazyUnit(List(1,2)), lazyUnit(List(3,4)))(_ ++ _)(executorService).get(2, TimeUnit.MINUTES))//1개로 가능
+    println(Par.sequence(List(lazyUnit(1)))(executorService).get(2, TimeUnit.MINUTES))
+
+    executorService.shutdownNow()
+
+
   }
 
 }

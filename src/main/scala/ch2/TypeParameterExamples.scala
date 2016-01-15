@@ -23,9 +23,12 @@ object TypeParameterExamples {
     val lessThan = new Function2[Int, Int, Boolean] {
       override def apply(v1: Int, v2: Int): Boolean = v1 < v2
     }
+    val lessThan2 = (x:Int, y:Int) => x < y
 
     lessThan(1,3)
     lessThan.apply(1,3)
+    lessThan2(1,3)
+    lessThan2.apply(1,3)
 
     isSorted(Array(1, 3, 2), lessThan)
     //
