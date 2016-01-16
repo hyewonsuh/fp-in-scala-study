@@ -285,6 +285,7 @@ object ListExample {
     println(zipWith(List(1, 2, 3), List(1, 2, 3))(_+_))
 
     println(hasSequence(List(1, 2, 3, 4), List(2, 1)))
+
   }
 }
 

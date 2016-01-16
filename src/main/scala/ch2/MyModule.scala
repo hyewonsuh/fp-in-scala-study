@@ -10,12 +10,10 @@ object MyModule {
     else n
 
   def factorial(n: Int): Int = {
-
     @annotation.tailrec
     def go(n: Int, acc: Int): Int = {
-
       if (n <= 0) acc
-      else go(n - 1, n * acc) //tail recurcive --> compile while byte code
+      else go(n - 1, n * acc) //tail recursive --> compile while 문 byte code
     }
     go(n, 1)
   }
