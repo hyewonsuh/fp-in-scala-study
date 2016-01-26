@@ -114,13 +114,94 @@ val ys = xs match {
   case (h :: tail) => 10 :: tail
   case Nil => Nil
 }   
+//tail data sharing
 assert((tail eq xs.tail) == true) // AnyRef.eq 함수는 same reference인지 비교함
 assert((tail eq ys.tail) == true)
 ````
 
+- Singly linked List example
+
+````scala
+sealed trait List[+A]
+case object Nil extends List[Nothing] // 
+case class Cons[+A](head: A, tail: List[A]) extends List[A]
+ 
+object List {
+  def apply[A](as: A*): List[A] = // Variadic function syntax
+    if (as.isEmpty) Nil
+    else Cons(as.head, apply(as.tail: _*))
+
+}
+````
+
+- 목록에 대한 재귀과 고차 함수로의 일반화
+
+````scala
+
+  def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B =  as match {
+      case Nil => z
+      case Cons(x, xs) => f(x, foldRight(xs, z)(f))  
+                       // f(x, f(x, f(x, f(x, foldRight(xs, z)(f)))))
+    }
+    
+  val add = (a:Int,b:Int) => a + b
+  foldRight(List(1,2,3),0)(add)
+  // add(1,add(2, add(3, 0))) // 목록의 오른쪽 요소부터 f 에 적용 
+````
+
+- ADT(algebraic data Type, 대수적자료형식) : 하나의 이상의 data construct 로 이루어진 타입. List의 경우 Nil 과 Cons(h, tail)
++ 이런 타입을 data constructor 의 Sum Type(union, 합, 합집합) 이라 함 (List는 Nil과 Cons의 합)
++ 이런 data constructor 를 인자들의 의 Product Type 이라고 함.
++ ADT described as 'sum of products types' 
+
+````scala
+sealed abstract class Bool
+case object True extends Bool
+case object False extends Bool
+
+sealed trait Tree[T]
+case class Node[T](left: Tree[T], right: Tree[T]) extends Tree[T]
+case class Leaf[T](value: T) extends Tree[T]
+````
+
 ## 04. Handling errors without exceptions
+
+- throw exceptions  == side effect
+- 오류를 값으로 돌려주자.
+- 부분함수 (함수내에서 일부입력에 대해 정의되지 않음. ex) if empty list, throw exception))를 완전함수로
+- 오류 처리 논리를 통하고 격리를 유지할 수 있음
+- 고차 함수를 이용해서 오류를 나타내는 값의 처리와 전파를 캡슐화
+
+````scala
+sealed trait Option[+A]{
+  def map[B](f: A => B): Option[B] = this match {
+    case None => None //None인 경우는 함수를 적용하지 않음.
+    case Some(v) => Some(f(v)) //즉, 오류가 없는 경우만 계산을 진행함. f가 실패하면?
+  }
+
+  def flatMap[B](f: A => Option[B]): Option[B] =
+    map(f) getOrElse None
+
+// B >:A B는 A와 같거나 A의 상위타입
+  def getOrElse[B >: A](default: => B): B = this match { //default는 lazy paramter (실제로 쓰일때까지 평가되지 않음)
+    case None => default
+    case Some(v) => v
+  }
+}
+case class Some[+A](get: A) extends Option[A]
+case object None extends Option[Nothing]
+````
+
+- o.getOrElse(throw new Exception("Fail")) //복구 불가능할 경우 사용하는 관용구.
+- 모든 함수의 Option이 많아질까? => 보통의 함수를 Option 에 작용하는 함수로 승급(lift)시킬 수 있다.
+
+````scala
+  // a=>b 함수를 Option[a] => Option[B]로 승급시키는 함수
+  def lift[A, B](f: A => B): Option[A] => Option[B] = _ map f
+  lift((a: Int) => a.toString)(Some(3))
+````
+
 ## 05. Strictness and laziness
 ## 06. Purely functional state
 ## 07. Purely functional parallelism
-
 
