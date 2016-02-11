@@ -35,6 +35,11 @@ object RNG {
 
   }
 
+  def boolean(rng:RNG): (Boolean, RNG) = {
+    rng.nextInt match {
+      case (i, r) => (i % 2 == 0, r)
+    }
+  }
   def double(rng: RNG): (Double, RNG) = {
     val (i, rng2) = nonNegativeInt(rng)
     ((i / (Int.MaxValue.toDouble + 1)), rng2)
@@ -104,6 +109,7 @@ object RNG {
 
 
 import State._
+import ch6.RNG.SimpleRNG
 
 case class State[S, +A](run: S => (A, S)) {
   def map[B](f: A => B): State[S, B] =
@@ -186,5 +192,8 @@ object Candy {
 
 
 object RNGExamples extends App {
+
+  println(RNG.double(SimpleRNG(123345)))
+  println(RNG.intDouble(SimpleRNG(33454)))
 
 }

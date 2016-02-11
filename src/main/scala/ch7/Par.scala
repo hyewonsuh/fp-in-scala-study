@@ -24,7 +24,10 @@ object Par {
 
     override def cancel(mayInterruptIfRunning: Boolean): Boolean = false
 
-    override def get(timeout: Long, unit: TimeUnit): A = get
+    override def get(timeout: Long, unit: TimeUnit): A = {
+      Thread.sleep(10000)
+      get
+    }
   }
 
   def map2[A, B, C](a: Par[A], b: Par[B])(f: (A, B) => C): Par[C] =
@@ -97,6 +100,7 @@ object Par {
     case Nil => unit(Nil)
     case h :: t => map2(h, fork(sequence_bad(t)))((a, b) => a :: b)
   }
+
   // 시퀀스를 반으로 나누어 재귀 호출하도록.
   // fork로 감쌌기 때문에 입력목록이 크더라도 바로 리턴됨
   // run이 호출되면, 1개의 비동기 계산 -> N개의 병렬계산을 띄우고 모두 완료되면 하나의 목록으로 취합함.
@@ -120,24 +124,41 @@ object Par {
     map(sequence(pars))(_.flatten)
   }
 
-  //max in IndexedSeq
+  // map(unit(1))(_+1) == unit(2)
+  // 임의의 Par객체에 Future의 결과가 동일하면 서로 같다로 정의.
+  def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
+    p(e).get == p2(e).get
+
+  //개별적인 쓰레드를 띄워 fa를 평가하지는 않으나, 계산의 인스터스화를 필요한 시점까지 미루는 용도로 사용할수 있음.
+  def delay[A](fa: => Par[A]): Par[A] = es => fa(es)
 
   def main(args: Array[String]) {
 
-//    val filter: Par[List[Int]] = Par.parFilter(List(1))(a => a> 2)
+    //    val a = lazyUnit(42+1)
+    //    val b = lazyUnit(52+1)
+    val S = Executors.newFixedThreadPool(1)
+
+    //    S.submit(new Callable[Int] {
+    //      def call = 1 + 42
+    //    }) // no deadlock
+    //    println(a(S).get()) //no deadlock (fork가 하나만 감싸질때는 문제가 없으나, 그 외는 deadlock 문제가 있음.
+
+    // 고정쓰레드풀 사이즈가 1이면..
+
+    println(fork(
+      fork(
+        unit(41 + 1)
+      )
+    )(S)) //case class toString 에 의해 get이 접근되어 deadlock
 
 
-    val executorService: ExecutorService = Executors.newFixedThreadPool(1)
-//    println(filter(executorService).get(2, TimeUnit.SECONDS))
-    // 이 예제는 thread deadlock이 무조건 생김 // 개수가 4까지는 ..
+    S.shutdown()
 
-//    println(Par.fork(unit(1))(executorService).get(2, TimeUnit.MINUTES)) //1개로 가능
-
-//    println(Par.map2(lazyUnit(List(1,2)), lazyUnit(List(3,4)))(_ ++ _)(executorService).get(2, TimeUnit.MINUTES))//1개로 가능
-    println(Par.sequence(List(lazyUnit(1)))(executorService).get(2, TimeUnit.MINUTES))
-
-    executorService.shutdownNow()
-
+    // For a thread pool of size 2, `fork(fork(fork(x)))` will deadlock, and so on.
+    // Another, perhaps more interesting example is `fork(map2(fork(x), fork(y)))`.
+    // In this case, the outer task is submitted first and occupies a thread waiting for both `fork(x)` and `fork(y)`.
+    // The `fork(x)` and `fork(y)` tasks are submitted and run in parallel, except that only one thread is available,
+    // resulting in deadlock.
 
   }
 
