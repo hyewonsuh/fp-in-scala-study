@@ -38,16 +38,13 @@ case object None extends Option[Nothing]
 
 object OptionExample {
 
-  def mean(xs: Seq[Double]): Option[Double] = {
+  def mean(xs: Seq[Double]): Option[Double] =
     if (xs.isEmpty) None
     else Some(xs.sum / xs.length)
-  }
 
-  def variance(xs: Seq[Double]): Option[Double] = {
+  def variance(xs: Seq[Double]): Option[Double] =
     mean(xs) flatMap (m => mean(xs.map(x => math.pow(x - m, 2))))
 
-    //    xs.map( x => math.pow(x - mean(xs).getOrElse(0.0), 2))
-  }
 
   // a=>b 함수를 Option[a] => Option[B]로 승급시키는 함수
   def lift[A, B](f: A => B): Option[A] => Option[B] = _ map f
@@ -98,6 +95,7 @@ object OptionExample {
     case h :: t => h flatMap (hh => sequence(t) map (hh :: _))
   }
 
+
   //??
   def sequence2[A](a: List[Option[A]]): Option[List[A]] =
     a.foldRight[Option[List[A]]](Some(Nil))((x, y) => map2(x, y)(_ :: _))
@@ -134,8 +132,15 @@ object OptionExample {
     //    println(sequence(List(Some(1), None, Some(3))))
 
 //    parseInt(List("1", "2", "3"))
-    println(traverse(List("1", "2", "3"))(s => Try(s.toInt)))
+//    println(traverse(List("1", "2", "3"))(s => Try(s.toInt)))
 
+
+//    println(mean(List(1, 2, 3)))
+//    println(variance(List(0)))
+
+    println(lift(math.abs))
+
+    List(1,2,3).fl
   }
 
 
