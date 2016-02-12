@@ -202,6 +202,87 @@ case object None extends Option[Nothing]
 ````
 
 ## 05. Strictness and laziness
+
+````scala
+    //각 변환은 새로운 임시목록을 생성하여 다음 변환의 입력으로만 쓰이고 폐기됨
+    List(1, 2, 3, 4).map(_ + 10).filter(_ % 2 == 0).map(_ * 3)
+    List(11, 12, 13, 24).filter(_ % 2 == 0).map(_ * 3)
+    List(12, 14).map(_ * 3)
+    List(36, 42)
+````
+
+- while loop 를 쓰는대신 고수준 함수 합성을 추구 =>  non-strictness 는 함수의 효율성과 모듈성을 개선하는 근본적인 기법임.
+- non-strictness ? 함수가 하나 이상의 인자를 평가하지 않는 것.
+
+````scala
+square(41.0 * 1.0 ) // 인수를 평가한 후 실행 (엄격한 함수)
+// 이미 알고 있는 non-strictness 예.
+println(false && { 
+  println("!!"); true //실행안됨
+})
+````
+
+- scala 의 non-strictness 함수 작성 방법
+- **=> A** thunk (썽크) : 표현식이 평가되지 않은 상태
+
+````scala
+// i의 평가     
+def maybeTwice(b:Boolean, i: => Int) = if(b) i + i else 0 
+
+scala> maybeTwice(true, {println("hi"); 1 + 2}) // twice evaluated.
+hi
+hi
+res2: Int = 6
+
+
+//비엄격함수의 인수는 값이 아니라  by name 으로 전달됨
+def maybeTwice2(b:Boolean, i: => Int ) ={
+lazy val j = i
+if(b) j + j else 0 //처음 참조 될때 를 한번 평가 후 lazy변수인 j에 캐싱함.
+}
+
+scala> maybeTwice2(true, {println("hi"); 1 + 1})
+hi
+res0: Int = 4
+
+````
+
+>call-by-name: **=> A**
+>>by name 으로 전달되는 parameter, 함수 내에서 사용된 패러미터의 이름에 대해 전달된 인수로 대체됨. (평가되지 않고)
+>>def if2[A](cond: Boolean, onTrue: **=> A**, onFalse: => A):A =    if(cond) **onTrue** else onFalse
+>>if2(true, {println("true");1}, {println("false");2})
+>>`val' parameters may not be call-by-name 
+
+>0-arity Functions(scala.Function0 type): **() => A** 
+>>def if3[A](cond: Boolean, onTrue: **() => A**, onFalse: () => A):A = if(cond) **onTrue()** else onFalse()
+>>if3(true, { **() =>** println("true");1}, { () => println("false");2})
+
+
+- Lazy List Example
+ 
+````scala
+sealed trait Stream[+A] 
+
+case object Empty extends Stream[Nothing]
+case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A] //`val' parameters may not be call-by-name
+
+object Stream {
+
+  def cons[A](hd: => A, tl: => Stream[A]): Stream[A] = {
+    lazy val head = hd
+    lazy val tail = tl
+    Cons(() => head, () => tail)
+  }
+
+  def empty[A]: Stream[A] = Empty
+
+  def apply[A](as: A*): Stream[A] =
+    if (as.isEmpty) empty else cons(as.head, apply(as.tail: _*))
+
+````
+
+- laziness 표현식의 서술과 평가의 분리  
+
 ## 06. Purely functional state
 ## 07. Purely functional parallelism
 

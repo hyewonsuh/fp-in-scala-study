@@ -140,7 +140,6 @@ object OptionExample {
 
     println(lift(math.abs))
 
-    List(1,2,3).fl
   }
 
 
